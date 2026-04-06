@@ -1,65 +1,38 @@
 "use client";
 
-import { restClient, ListTickerTypes200Response } from "@massive.com/client-js";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { restClient } from "@massive.com/client-js";
 import { useEffect, useState } from "react";
+import {
+  ListTickersMarketEnum,
+  ListTickersOrderEnum,
+  ListTickers200Response,
+} from "@massive.com/client-js";
 
-type Tickers = {
-  asset_class: string;
-  code: string;
-  description: string;
-  locale: string;
-};
-
-export default function Tickers() {
-  const [data, setData] = useState<ListTickerTypes200Response | null>(null);
+export default function Tickers({ type }: { type: string }) {
+  const [data, setData] = useState<ListTickers200Response | null>(null);
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_API_KEY;
-    const getData = async () => {
-      if (!apiKey) {
-        throw new Error("Missing API_KEY environment variable");
-      }
-
-      const rest = restClient(apiKey, "https://api.massive.com");
-
+    if (!apiKey) {
+      throw new Error("Api key required.");
+    }
+    const rest = restClient(apiKey, "https://api.massive.com");
+    const listTickers = async () => {
       try {
-        const response = await rest.listTickerTypes({});
+        const response = await rest.listTickers({
+          type: type,
+          market: ListTickersMarketEnum["Stocks"],
+          active: true,
+          order: ListTickersOrderEnum["Asc"],
+          limit: 1000,
+        });
         setData(response);
-        console.log("Response:", response);
       } catch (e) {
         console.error("An error happened:", e);
       }
     };
-    getData();
-  }, []);
+    listTickers();
+  }, [type]);
 
-  return (
-    <div>
-      <div>
-        <h1 className="font-medium">Coinday</h1>
-        <Select>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Tickers" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {data?.results?.map((r: Tickers, i: number) => (
-                <SelectItem key={i} value={r.code}>
-                  {r.code} ({r.description})
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
+  return <div>empty data for now</div>;
 }
