@@ -20,7 +20,7 @@ type Ticker = {
 };
 
 interface Props {
-    onChange: (v: string) => void;
+    onChange: (type: string) => void;
 }
 
 export default function TickerSelect({ onChange }: Props) {

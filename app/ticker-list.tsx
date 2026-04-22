@@ -19,7 +19,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import TypeBadge from "./type-badge";
 
-export default function TickerTable({ type }: { type: string }) {
+export default function TickerTable({
+    type,
+    active,
+}: {
+    type: string;
+    active?: boolean;
+}) {
     const [data, setData] = useState<ListTickers200Response | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -36,9 +42,9 @@ export default function TickerTable({ type }: { type: string }) {
             try {
                 setLoading(true);
                 const response = await rest.listTickers({
-                    type: type,
+                    type,
                     market: ListTickersMarketEnum["Stocks"],
-                    active: true,
+                    ...(active !== undefined ? { active } : {}),
                     order: ListTickersOrderEnum["Asc"],
                     limit: 1000,
                 });
@@ -53,7 +59,7 @@ export default function TickerTable({ type }: { type: string }) {
             }
         };
         fetchTickers();
-    }, [type]);
+    }, [type, active]);
 
     const parentRef = useRef(null);
 
