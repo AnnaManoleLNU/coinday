@@ -1,7 +1,7 @@
 "use client";
 
 import { restClient } from "@massive.com/client-js";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
     ListTickersMarketEnum,
     ListTickersOrderEnum,
@@ -23,7 +23,7 @@ export default function TickerTable({
     type,
     active,
 }: {
-    type: string;
+    type?: string;
     active?: boolean;
 }) {
     const [data, setData] = useState<ListTickers200Response | null>(null);
@@ -35,19 +35,52 @@ export default function TickerTable({
         throw new Error("Api key required.");
     }
 
-    const rest = restClient(apiKey, "https://api.massive.com");
+    const rest = useMemo(() => {
+        return restClient(apiKey, "https://api.massive.com");
+    }, [apiKey]);
+
     useEffect(() => {
         const fetchTickers = async () => {
-            if (type === "") return;
             try {
                 setLoading(true);
-                const response = await rest.listTickers({
+                setError(null);
+
+                const baseParams = {
                     type,
                     market: ListTickersMarketEnum["Stocks"],
-                    ...(active !== undefined ? { active } : {}),
                     order: ListTickersOrderEnum["Asc"],
                     limit: 1000,
-                });
+                };
+
+                let response: ListTickers200Response;
+
+                if (active === undefined) {
+                    const [activeResponse, inactiveResponse] = await Promise.all([
+                        rest.listTickers({
+                            ...baseParams,
+                            active: true,
+                        }),
+                        rest.listTickers({
+                            ...baseParams,
+                            active: false,
+                        }),
+                    ]);
+
+                    // response if active is undefined should include both active and inactive tickers, sorted by ticker name
+                    response = {
+                        ...activeResponse,
+                        results: [
+                            ...(activeResponse.results ?? []),
+                            ...(inactiveResponse.results ?? []),
+                        ].sort((a, b) => a.ticker.localeCompare(b.ticker)),
+                    };
+                } else {
+                    // if active is defined, filter by active status
+                    response = await rest.listTickers({
+                        ...baseParams,
+                        active,
+                    });
+                }
 
                 console.log(response);
 
@@ -58,13 +91,14 @@ export default function TickerTable({
                 setLoading(false);
             }
         };
+
         fetchTickers();
-    }, [type, active]);
+    }, [type, active, rest]);
 
     const parentRef = useRef(null);
 
     const rowVirtualizer = useVirtualizer({
-        count: 1000,
+        count: data?.results?.length || 0,
         getScrollElement: () => parentRef.current,
         estimateSize: () => 44,
         overscan: 12,
@@ -79,7 +113,7 @@ export default function TickerTable({
     }
     return (
         <>
-            {data?.results && (
+            {data?.results ? (
                 <div className="mt-3 overflow-hidden rounded-lg border border-border bg-card w-full">
                     <div className="grid grid-cols-[28px_90px_1fr_70px_70px_60px_70px] items-center gap-3 border-b border-border bg-muted/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         <span></span>
@@ -105,7 +139,6 @@ export default function TickerTable({
                                     <button
                                         key={vi.index}
                                         type="button"
-                                        // onClick={() => setSelected(t)}
                                         className={cn(
                                             "absolute left-0 top-0 grid w-full grid-cols-[28px_90px_1fr_70px_70px_60px_70px] items-center gap-3 border-b border-border/50 px-4 text-left text-sm transition-colors hover:bg-accent/60 focus:bg-accent focus:outline-none"
                                         )}
@@ -149,6 +182,8 @@ export default function TickerTable({
                         </div>
                     </div>
                 </div>
+            ) : (
+                <p>No tickers found for the selected type.</p>
             )}
         </>
     );

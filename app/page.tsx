@@ -6,7 +6,7 @@ import TickerStatusSelect from "./ticker-status-select";
 import { useState } from "react";
 
 export default function Page() {
-    const [type, setType] = useState("");
+    const [type, setType] = useState<string | undefined>(undefined);
     const [active, setActive] = useState<boolean | undefined>(undefined);
     return (
         <div className="flex flex-col p-6">
