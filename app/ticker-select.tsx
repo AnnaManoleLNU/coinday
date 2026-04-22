@@ -6,6 +6,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -22,7 +23,7 @@ interface Props {
   onChange: (v: string) => void;
 }
 
-export default function TickerTypes({ onChange }: Props) {
+export default function TickerSelect({ onChange }: Props) {
   const [data, setData] = useState<ListTickerTypes200Response | null>(null);
 
   useEffect(() => {
@@ -45,15 +46,16 @@ export default function TickerTypes({ onChange }: Props) {
   }, []);
 
   return (
-    <div>
       <div>
         <h1 className="font-medium">Coinday</h1>
         <Select onValueChange={(v) => onChange(v)}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Tickers" />
+            <SelectValue placeholder="Select ticker" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
+              <SelectLabel>Tickers</SelectLabel>
+              <SelectItem key="all" value={null}>All tickers</SelectItem>
               {data?.results?.map((r: Tickers, i: number) => (
                 <SelectItem key={i} value={r.code}>
                   {r.code} ({r.description})
@@ -63,6 +65,6 @@ export default function TickerTypes({ onChange }: Props) {
           </SelectContent>
         </Select>
       </div>
-    </div>
+   
   );
 }
