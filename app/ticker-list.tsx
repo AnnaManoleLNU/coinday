@@ -163,13 +163,20 @@ export default function TickerTable({
                                                 {ticker?.name}
                                             </TooltipContent>
                                         </Tooltip>
+                                        
                                         <TypeBadge type={ticker?.type} />
-                                        <Badge
-                                            variant="outline"
-                                            className="h-5 justify-center px-1.5 font-mono text-[10px] font-medium"
-                                        >
-                                            {ticker?.primary_exchange}
-                                        </Badge>
+                                        {ticker?.primary_exchange ? (
+                                            <Badge
+                                                variant="outline"
+                                                className="h-5 justify-center px-1.5 font-mono text-[10px] font-medium"
+                                            >
+                                                {ticker?.primary_exchange}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-sm text-foreground/80">
+                                                -
+                                            </span>
+                                        )}
                                         <span className="font-mono text-[11px] uppercase text-muted-foreground">
                                             {ticker?.market}
                                         </span>
